@@ -177,3 +177,5 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+#git push -u origin main
