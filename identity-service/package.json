@@ -25,6 +25,7 @@
     "mongoose": "^9.7.3",
     "nodemon": "^3.1.14",
     "rate-limit-redis": "^5.0.0",
+    "rate-limiter-flexible": "^11.2.0",
     "winston": "^3.19.0"
   }
 }

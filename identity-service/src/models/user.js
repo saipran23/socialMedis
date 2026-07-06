@@ -32,16 +32,17 @@ const UserSchema = new mongoose.Schema({
 
 
 UserSchema.pre('save', async function (next) {
-    if(!this.isModified('password')) {
-        try {
-
-            this.password = await argon2.hash(this.password);
-
-        }catch (e){
-            return next(e);
-        }
+    if (!this.isModified('password')) {
+        return next();
     }
-})
+
+    try {
+        this.password = await argon2.hash(this.password);
+        next();
+    } catch (err) {
+        next(err);
+    }
+});
 
 UserSchema.methods.comparePassword = async function (password) {
     try {
