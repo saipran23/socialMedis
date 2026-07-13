@@ -40,11 +40,10 @@ app.get('/health', (req, res) => {
 })
 
 
-function connectToDB() {
-    mongoose.connect(process.env.MONDODB_URL)
+async function connectToDB() {
+    await mongoose.connect(process.env.MONDODB_URL)
         .then(() => logger.info('MongoDB Connected'))
         .catch(err => logger.error("mongoDb connection error",err));
-    console.log("MongoDB Connected");
 }
 
 export const redisClient = new Redis(process.env.REDIS_URL);
@@ -65,22 +64,25 @@ app.use((req, res, next) => {
             res.status(429).json({
                 success: false,
                 message :  "rateLimit exceeded"
-            })
+            });
         });
 });
 
-app.use('/api/auth/register',limiter(16*60*1000, 50));
 app.use(errorHandler);
-app.use('/api/auth', auth);
+
+
+// app.use('/api/auth/register',limiter(16*60*1000, 50));
+app.use('/api/auth/login',limiter());
+app.use('/api/auth', auth, limiter());
 
 const port = process.env.PORT || 3001;
 async function startServer(){
     app.listen(port, () => {
         console.log(`Listening on port ${port}`);
     });
-    connectToDB();
+    await connectToDB();
 }
-startServer();
+await startServer();
 
 
 process.on('unhandledRejection', (reason, promise) => {

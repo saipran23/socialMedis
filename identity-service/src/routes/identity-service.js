@@ -3,10 +3,11 @@ import express from "express";
 
 const router = express.Router();
 
-import {registerUser} from "../controllers/identity-controller.js";
+import {registerUser, loginUser} from "../controllers/identity-controller.js";
 
 
 router.post("/register", registerUser);
+router.post("/login", loginUser);
 
 
 export default router;

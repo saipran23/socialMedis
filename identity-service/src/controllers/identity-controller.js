@@ -1,7 +1,7 @@
 
 import logger from "../utils/logger.js";
 import User from "../models/user.js";
-import {validationRegration} from "../utils/validation.js";
+import {validationRegration, validationLogin} from "../utils/validation.js";
 import {genrateToken} from "../utils/genrateToken.js";
 
 const registerUser = async (req, res) => {
@@ -10,11 +10,11 @@ const registerUser = async (req, res) => {
 
         const { error, value } = validationRegration(req.body);
         if (error) {
-            logger.warn(`validationRegration error: ${error}`);
+            logger.warn(`validationRegistration error: ${error}`);
             return res.status(400).json({
                 success: false,
                 message: error,
-            })
+            });
         }
 
         const {email, password, username } = req.body;
@@ -40,16 +40,73 @@ const registerUser = async (req, res) => {
             message: "User registered successfully",
             accessToken: accessToken,
             refreshToken: refreshToken,
-        })
+        });
 
     }catch(err){
-        logger.error("registeration error occured", err);
+        logger.error("registration error occurred", err);
         return res.status(500).json({
             success: false,
             message: 'Internal Server Error',
-        })
+        });
+    }
+}
+
+const loginUser = async (req, res) => {
+    logger.info('LoginUser', req.body);
+
+    try{
+        const { error, value } = validationLogin(req.body);
+        if (error) {
+            logger.warn(`validationLogin error: ${error}`);
+            return res.status(400).json({
+                success: false,
+                message: error,
+            });
+        }
+
+        const {email, password} = req.body;
+
+        const user = await User.findOne({ email });
+
+        if(!user){
+            logger.warn(`Invalid user ${email}`);
+            return res.status(400).json({
+                success: false,
+                message: `Invalid credentials`
+            })
+        }
+
+        const isValidPassword = await user.comparePassword(password);
+        console.log(isValidPassword);
+        if(!isValidPassword){
+            logger.warn(`Invalid Password ${user.email}`);
+            return res.status(400).json({
+                success: false,
+                message: `Invalid Password`
+            })
+        }
+
+        const {accessToken, refreshToken} = await genrateToken(user);
+
+        res.status(201).json({
+            success: true,
+            message: "User Login successfully",
+            userId:user._id,
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+        });
+
+
+    }catch (err){
+        logger.error("Login error occurred", err);
+        return res.status(500).json({
+            success: false,
+            message: 'Internal Server Error',
+        });
     }
 }
 
 
-export {registerUser};
+
+
+export {registerUser, loginUser};

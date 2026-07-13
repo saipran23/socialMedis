@@ -11,5 +11,14 @@ const validationRegration = (data) => {
     return schema.validate(data);
 };
 
-export {validationRegration};
+const validationLogin = (data) => {
+    const schema = Joi.object({
+        email: Joi.string().email().required(),
+        password: Joi.string().required(),
+    })
+
+    return schema.validate(data);
+};
+
+export {validationRegration, validationLogin};
 

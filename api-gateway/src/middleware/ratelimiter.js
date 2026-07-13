@@ -1,12 +1,12 @@
-import { rateLimit } from 'express-rate-limit'
+import { rateLimit } from 'express-rate-limit';
 import logger from "../utils/logger.js";
 import { RedisStore } from 'rate-limit-redis'
 import {redisClient} from "../index.js";
 
-const limiter = () => {
+const limiter = (maxRequests, time) => {
     return rateLimit({
-        max: 16 * 60 * 1000,
-        windowMs: 50,
+        max: maxRequests,
+        windowMs: time,
         message: "Too many requests, please try again later",
         standardHeaders: true,
         legacyHeaders: false,
