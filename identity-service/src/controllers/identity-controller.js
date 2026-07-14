@@ -3,6 +3,8 @@ import logger from "../utils/logger.js";
 import User from "../models/user.js";
 import {validationRegration, validationLogin} from "../utils/validation.js";
 import {genrateToken} from "../utils/genrateToken.js";
+import user from "../models/user.js";
+import RefreshToken from "../models/RefreshToken.js";
 
 const registerUser = async (req, res) => {
     logger.info('registerUser', req.body);
@@ -106,7 +108,85 @@ const loginUser = async (req, res) => {
     }
 }
 
+const refreshTokenUser = async (req, res) => {
+    logger.info('RefreshToken', req.body);
+    try {
+
+        const { refreshToken } = req.body;
+        if(!refreshToken){
+            logger.warn(`RefreshToken is required`);
+            return res.status(400).json({
+                success: false,
+                message: "RefreshToken is required",
+            })
+        }
+
+        const storedToken = await RefreshToken.findOne({token: refreshToken});
+
+        if(!storedToken || storedToken.expiresAt < new Date()){
+            logger.warn("Invalid or Expired refresh token")
+            return res.status(401).json({
+                success: false,
+                message: "Invalid or Expired refresh token",
+            })
+        }
+
+        const user = await User.findById(storedToken.user);
+        if(!user){
+            logger.warn(`User is not found`);
+            res.status(401).json({
+                success: false,
+                message: "user is not found",
+            })
+        }
+
+        const {accessToken: newAccessToken, refreshToken: newRefreshToken} = await genrateToken(user);
+
+        await RefreshToken.deleteOne({_id: storedToken._id});
+        res.status(200).json({
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken,
+        })
 
 
+    }catch(err){
+        logger.error("Refresh Token Error", err);
+        return res.status(500).json({
+            success: false,
+            message: 'Internal Server Error',
+        });
+    }
+}
 
-export {registerUser, loginUser};
+const logoutUser = async (req, res) => {
+    logger.info('LogoutUser', req.body);
+    try {
+        const {refreshToken} = req.body;
+
+        if(!refreshToken){
+            logger.warn(`RefreshToken is required`);
+            return res.status(400).json({
+                success: false,
+                message: "RefreshToken is required",
+            })
+        }
+
+        await RefreshToken.deleteOne({token: storedToken.token});
+        logger.info(`RefreshToken  is deleted ${refreshToken}`);
+
+        res.status(200).json({
+            success: true,
+            message: "User Logout Successfully",
+        })
+
+    }catch (err){
+        logger.error("Logout Error", err);
+        return res.status(500).json({
+            success: false,
+            message: 'Logout Error',
+        });
+    }
+}
+
+
+export {registerUser, loginUser, refreshTokenUser, logoutUser};
