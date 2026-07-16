@@ -11,6 +11,7 @@ import proxy from 'express-http-proxy';
 import errorHandler from "./middleware/errorHandler.js";
 import logger from "./utils/logger.js";
 import limiter from "./middleware/ratelimiter.js";
+import validateToken from "./middleware/authMiddleware.js";
 
 dotenv.config();
 const app = express();
@@ -21,7 +22,7 @@ app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(cors());
-app.use(errorHandler);
+
 
 app.use((req, res, next) => {
     logger.info(`Received ${req.method} request to ${req.url}`);
@@ -70,7 +71,7 @@ const proxyOptions = {
 app.use('/v1/auth', proxy(process.env.IDENTITY_SERVICE_URL, {
     ...proxyOptions,
     proxyReqOptDecorator: (proxyReqOpts, srcReq)=>{
-        proxyReqOpts.headers['content-type'] = 'application/json';
+        proxyReqOpts.headers['Content-Type'] = 'application/json';
         return proxyReqOpts;
     },
     userResDecorator: (proxyRes, proxyResData, userReq, userRes)=>{
@@ -79,13 +80,29 @@ app.use('/v1/auth', proxy(process.env.IDENTITY_SERVICE_URL, {
     }
 }));
 
+app.use('/v1/post', validateToken ,proxy(process.env.POST_SERVICE_URL, {
+    ...proxyOptions,
+    proxyReqOptDecorator: (proxyReqOpts, srcReq)=>{
+        proxyReqOpts.headers['Content-Type'] = 'application/json';
+        proxyReqOpts.headers['x-auth-id'] = srcReq.user.id;
+        return proxyReqOpts;
+    },
+    userResDecorator: (proxyRes, proxyResData, userReq, userRes)=>{
+        logger.info(`Response received form from Post service: ${proxyRes.statusCode}`);
+        return proxyResData;
+    }
+}));
 
 
 
+
+
+app.use(errorHandler);
 
 app.listen(PORT, () => {
     logger.info(`Api gateway is running on the port ${PORT}`);
     logger.info(`Identity Services is running on the port ${process.env.IDENTITY_SERVICE_URL}`);
+    logger.info(`Post Services is running on the port ${process.env.POST_SERVICE_URL}`);
     console.log(`server listening on port ${PORT}`);
 })
 

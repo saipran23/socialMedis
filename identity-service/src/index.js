@@ -11,6 +11,7 @@ import Redis from "ioredis";
 import limiter from "./middleware/ratelimiter.js";
 import auth from "./routes/identity-service.js"
 import errorHandler from "./middleware/errorHandler.js"
+// import validateToken from "./middleware";
 
 const app = express();
 dotenv.config();
@@ -48,7 +49,7 @@ async function connectToDB() {
 
 export const redisClient = new Redis(process.env.REDIS_URL);
 
-const reteLimiter = new RateLimiterRedis({
+const rateLimiter = new RateLimiterRedis({
     storeClient: redisClient,
     keyPrefix: "middleware",
     points: 10,
@@ -57,7 +58,7 @@ const reteLimiter = new RateLimiterRedis({
 
 
 app.use((req, res, next) => {
-    reteLimiter.consume(req.ip)
+    rateLimiter.consume(req.ip)
         .then(()=> next())
         .catch(err => {
             logger.error(`rateLimit error for if ${req.ip}`)
