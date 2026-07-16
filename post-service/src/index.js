@@ -22,7 +22,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 app.use(helmet());
-// app.use(limiter);
+app.use(limiter());
 
 app.use((req, res, next) => {
     logger.info(`Received ${req.method} request to ${req.url}`);

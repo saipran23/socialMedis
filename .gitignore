@@ -178,4 +178,10 @@ Thumbs.db
 *.tmp
 *.temp
 
+# Multer uploads
+media-service/uploads/
+
+# or
+media-service/uploads/*
+
 #git push -u origin main

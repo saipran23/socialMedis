@@ -94,7 +94,21 @@ app.use('/v1/post', validateToken ,proxy(process.env.POST_SERVICE_URL, {
 }));
 
 
-
+app.use('/v1/media', validateToken ,proxy(process.env.MEDIA_SERVICE_URL, {
+    ...proxyOptions,
+    proxyReqOptDecorator: (proxyReqOpts, srcReq)=>{
+        proxyReqOpts.headers['x-auth-id'] = srcReq.user.id;
+        if(!srcReq.headers['content-type'].startsWith('multipart/form-data')) {
+            proxyReqOpts.headers['Content-Type'] = 'application/json';
+        }
+        return proxyReqOpts;
+    },
+    userResDecorator: (proxyRes, proxyResData, userReq, userRes)=>{
+        logger.info(`Response received form from media service: ${proxyRes.statusCode}`);
+        return proxyResData;
+    },
+    parseReqBody: false
+}));
 
 
 app.use(errorHandler);
@@ -103,6 +117,7 @@ app.listen(PORT, () => {
     logger.info(`Api gateway is running on the port ${PORT}`);
     logger.info(`Identity Services is running on the port ${process.env.IDENTITY_SERVICE_URL}`);
     logger.info(`Post Services is running on the port ${process.env.POST_SERVICE_URL}`);
+    logger.info(`Media Services is running on the port ${process.env.MEDIA_SERVICE_URL}`);
     console.log(`server listening on port ${PORT}`);
 })
 

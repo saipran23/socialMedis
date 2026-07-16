@@ -11,7 +11,7 @@ const logger = winston.createLogger({
         winston.format.splat(),
         winston.format.json(),
     ),
-    defaultMeta : {service: 'post-service'},
+    defaultMeta : {service: 'media-service'},
     transports: [
         new winston.transports.Console({
             level: process.env.LOG_LEVEL || 'info',
