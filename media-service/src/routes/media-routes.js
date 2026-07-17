@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
-import {uploadMedia} from "../contollers/media-controller.js";
+import {uploadMedia, getAllMedia} from "../contollers/media-controller.js";
 import authenticatedRequest from "../middleware/auth-middleware.js"
 import logger from "../utils/logger.js";
 
@@ -44,5 +44,7 @@ router.post('/upload', authenticatedRequest,(req, res, next) =>{
         })
 
 } ,uploadMedia);
+
+router.get("/getAll", authenticatedRequest, getAllMedia);
 
 export default router;

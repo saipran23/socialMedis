@@ -56,4 +56,23 @@ const uploadMedia = async (req, res) => {
     }
 }
 
-export {uploadMedia};
+
+const getAllMedia= async (req, res) => {
+    logger.info("Starting getAllMedia...");
+    try {
+
+    const results = await Media.find({});
+
+    return  res.status(200).json(results);
+
+    }catch(err) {
+        logger.error(`Error in getAllMedia: ${err.message}`);
+        return res.status(500).json({
+            success: false,
+            message: `Error in getAllMedia: ${err.message}`
+        })
+    }
+}
+
+
+export {uploadMedia, getAllMedia};

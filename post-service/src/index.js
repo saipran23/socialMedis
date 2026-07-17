@@ -1,4 +1,3 @@
-
 import express from 'express';
 import dotenv from "dotenv";
 
@@ -7,13 +6,14 @@ import mongoose from "mongoose";
 import Redis from "ioredis";
 import cors from "cors";
 import helmet from "helmet";
-import { RateLimiterRedis } from "rate-limiter-flexible";
+import {RateLimiterRedis} from "rate-limiter-flexible";
 
 import errorHandler from "./middleware/errorHandler.js";
 import logger from "./utils/logger.js";
 import limiter from "./middleware/ratelimiter.js";
 import postRoutes from "./routes/post-routes.js";
 import authMiddleware from "./middleware/auth-middleware.js";
+import connectToRabbitMQ from "./utils/rabbitmq.js";
 
 const PORT = process.env.PORT || 3002;
 
@@ -22,7 +22,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 app.use(helmet());
-app.use(limiter());
+
 
 app.use((req, res, next) => {
     logger.info(`Received ${req.method} request to ${req.url}`);
@@ -55,7 +55,7 @@ app.use((req, res, next) => {
 app.use('/api/post', (req, res, next) => {
     req.redisClient = redisClient;
     next();
-} ,authMiddleware, postRoutes);
+}, authMiddleware, postRoutes);
 
 async function connectToDB() {
     await mongoose.connect(process.env.MONDODB_URL)
@@ -63,13 +63,31 @@ async function connectToDB() {
         .catch(err => logger.error("mongoDb connection error", err));
 }
 
-
+app.use(limiter());
 app.use(errorHandler);
+
+async function connectRabbitMq() {
+    try {
+        await connectToRabbitMQ();
+    } catch (err) {
+        logger.error(`Error starting rabbit mq server: ${err.message}`);
+    }
+}
+
+
 async function startServer() {
-    app.listen(PORT, () => {
-        console.log(`Listening on port ${PORT}`);
-    });
-    await connectToDB();
+    try {
+        await connectToDB();
+        await connectRabbitMq();
+        app.listen(PORT, () => {
+            console.log(`Listening on port ${PORT}`);
+        });
+    }catch(err) {
+        logger.error(`Error starting server : ${err.message}`);
+
+    }
+
+
 }
 
 await startServer();
