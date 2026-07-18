@@ -1,0 +1,86 @@
+services:
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./api-gateway/.env
+    environment:
+      REDIS_URL: redis://redis:6379
+      IDENTITY_SERVICE_URL: http://identity-service:3001
+      POST_SERVICE_URL: http://post-service:3002
+      MEDIA_SERVICE_URL: http://media-service:3003
+      SEARCH_SERVICE_URL: http://search-service:3004
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  identity-service:
+    build: ./identity-service
+    env_file:
+      - ./identity-service/.env
+    environment:
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  post-service:
+    build: ./post-service
+    env_file:
+      - ./post-service/.env
+    environment:
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://rabbitmq:5672
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  media-service:
+    build: ./media-service
+    env_file:
+      - ./media-service/.env
+    environment:
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://rabbitmq:5672
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  search-service:
+    build: ./search-service
+    env_file:
+      - ./search-service/.env
+    environment:
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://rabbitmq:5672
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
