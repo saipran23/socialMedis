@@ -13,6 +13,9 @@ import errorHandler from "./middleware/errorHandler.js";
 import limiter from "./middleware/ratelimiter.js";
 import logger from "./utils/logger.js";
 import mediaRoutes from "./routes/media-routes.js";
+import {connectToRabbitMQ, publishEvent, consumeEvent} from "./utils/rabbitmq.js";
+import {handlePostDeleted} from "../eventHandlers/media-event-handlers.js";
+
 
 const PORT = process.env.PORT || 3003;
 
@@ -66,10 +69,13 @@ async function connectToDB() {
 
 
 async function startServer() {
+    await connectToDB();
+    await connectToRabbitMQ();
+    await consumeEvent('post.deleted', handlePostDeleted);
     app.listen(PORT, () => {
         console.log(`Listening on port ${PORT}`);
     });
-    await connectToDB();
+
 }
 
 await startServer();

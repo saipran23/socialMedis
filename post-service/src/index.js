@@ -13,7 +13,7 @@ import logger from "./utils/logger.js";
 import limiter from "./middleware/ratelimiter.js";
 import postRoutes from "./routes/post-routes.js";
 import authMiddleware from "./middleware/auth-middleware.js";
-import connectToRabbitMQ from "./utils/rabbitmq.js";
+import {connectToRabbitMQ} from "./utils/rabbitmq.js";
 
 const PORT = process.env.PORT || 3002;
 
