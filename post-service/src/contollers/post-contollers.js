@@ -3,6 +3,7 @@ import Post from "../models/post.js";
 import {validationCreatePost} from "../utils/validation.js";
 import {publishEvent} from "../utils/rabbitmq.js";
 
+
 async function invalidatePostCache(req, cacheKey) {
     // Delete single post cache
     await req.redisClient.del(cacheKey);
@@ -39,6 +40,14 @@ export const createPost = async (req, res) => {
         })
 
         await newCreatedPost.save();
+
+        await publishEvent('post.created', {
+            postId: newCreatedPost._id.toString(),
+            userId: newCreatedPost.user.toString(),
+            content: newCreatedPost.content,
+            createdAt : newCreatedPost.createdAt
+
+        });
         await invalidatePostCache(req, newCreatedPost._id.toString());
         logger.info("Post successfully created");
         res.status(201).json({

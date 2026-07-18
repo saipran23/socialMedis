@@ -94,6 +94,7 @@ app.use('/v1/post', validateToken ,proxy(process.env.POST_SERVICE_URL, {
 }));
 
 
+
 app.use('/v1/media', validateToken ,proxy(process.env.MEDIA_SERVICE_URL, {
     ...proxyOptions,
     proxyReqOptDecorator: (proxyReqOpts, srcReq)=>{
@@ -111,6 +112,22 @@ app.use('/v1/media', validateToken ,proxy(process.env.MEDIA_SERVICE_URL, {
 }));
 
 
+
+app.use('/v1/search', validateToken ,proxy(process.env.SEARCH_SERVICE_URL, {
+    ...proxyOptions,
+    proxyReqOptDecorator: (proxyReqOpts, srcReq)=>{
+        proxyReqOpts.headers['Content-Type'] = 'application/json';
+        proxyReqOpts.headers['x-auth-id'] = srcReq.user.id;
+        return proxyReqOpts;
+    },
+    userResDecorator: (proxyRes, proxyResData, userReq, userRes)=>{
+        logger.info(`Response received form from Post service: ${proxyRes.statusCode}`);
+        return proxyResData;
+    }
+}));
+
+
+
 app.use(errorHandler);
 
 app.listen(PORT, () => {
@@ -118,6 +135,7 @@ app.listen(PORT, () => {
     logger.info(`Identity Services is running on the port ${process.env.IDENTITY_SERVICE_URL}`);
     logger.info(`Post Services is running on the port ${process.env.POST_SERVICE_URL}`);
     logger.info(`Media Services is running on the port ${process.env.MEDIA_SERVICE_URL}`);
+    logger.info(`Search Services is running on the port ${process.env.SEARCH_SERVICE_URL}`);
     console.log(`server listening on port ${PORT}`);
 })
 

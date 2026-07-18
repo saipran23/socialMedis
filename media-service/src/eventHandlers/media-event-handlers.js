@@ -1,16 +1,19 @@
-import logger from "../src/utils/logger.js";
-import Media from "../src/models/mediaModel.js";
+import logger from "../utils/logger.js";
+import Media from "../models/mediaModel.js";
 
-import {deleteMediaCloudnary} from "../src/utils/cloudinary.js";
+import {deleteMediaCloudnary} from "../utils/cloudinary.js";
 
 export const handlePostDeleted = async (event) => {
     console.log(event);
 
     const {postId, mediaIds} = event;
 
+
     try {
 
-        const mediaToDeletes = await Media.find({_id: {$in: mediaIds}});
+        const mediaToDeletes = await Media.find({
+            publicId: { $in: mediaIds }
+        });
 
         for(const mediaToDelete of mediaToDeletes) {
             await deleteMediaCloudnary(mediaToDelete.publicId);

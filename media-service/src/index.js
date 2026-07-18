@@ -14,7 +14,7 @@ import limiter from "./middleware/ratelimiter.js";
 import logger from "./utils/logger.js";
 import mediaRoutes from "./routes/media-routes.js";
 import {connectToRabbitMQ, publishEvent, consumeEvent} from "./utils/rabbitmq.js";
-import {handlePostDeleted} from "../eventHandlers/media-event-handlers.js";
+import {handlePostDeleted} from "./eventHandlers/media-event-handlers.js";
 
 
 const PORT = process.env.PORT || 3003;
